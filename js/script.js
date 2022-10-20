@@ -5,6 +5,7 @@ const cells = [];
 
 let size = DEFAULT_BOARD_SIZE;
 createBoard(size + 2);
+setStartingPosition();
 
 // função para criar o tabuleiro de jogo
 // o tabuleiro é basicamente uma grade NxN
@@ -40,6 +41,16 @@ function createBoard(size) {
     }
 }
 
+// função para estabelecer estado inicial do jogo
+function setStartingPosition() {
+    start = size / 2;
+
+    insertPiece(start, start, 'white');
+    insertPiece(start + 1, start + 1, 'white');
+    insertPiece(start + 1, start, 'black');
+    insertPiece(start, start + 1, 'black');
+}
+
 // função auxiliar com a função de criar células
 function createCell() {
     const newCell = document.createElement('div');
@@ -57,7 +68,18 @@ function getCell(r, c) {
 // função para criar uma peça baseado
 // na cor recebida como parâmetro
 function createPiece(color) {
-    const newPiece = document.createElement('div').classList.add('piece', color);
+    const newPiece = document.createElement('div');
+
+    newPiece.classList.add('piece', color);
 
     return newPiece;
+}
+
+// função para inserir uma peça de
+// determinada cor em uma célula específica
+function insertPiece(r, c, color) {
+    const cell = getCell(r, c);
+    const piece = createPiece(color);
+
+    cell.appendChild(piece);
 }
