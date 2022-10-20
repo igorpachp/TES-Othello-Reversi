@@ -1,0 +1,47 @@
+#board {
+    height: 512px;
+    width: 512px;
+    padding: 2px;
+    box-sizing: border-box;
+    background-color: antiquewhite;
+    display: flex;
+    flex-direction: column;
+    gap: 2px 0;
+}
+
+.row {
+    flex-grow: 1;
+    flex-basis: 0;
+    display: flex;
+    gap: 2px;
+}
+
+.cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0feff;
+}
+
+.hidden {
+    flex-grow: 0.5;
+    background: none;
+}
+
+.piece {
+    box-sizing: border-box;
+    border: 2px solid #88888888;
+    border-radius: 50%;
+    height: 85%;
+    width: 85%;
+}
+
+.black {
+    background-color: black;
+}
+
+.white {
+    background-color: white;
+}
