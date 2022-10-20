@@ -1,6 +1,7 @@
 DEFAULT_BOARD_SIZE = 8;
 
 const board = document.getElementById('board');
+const cells = [];
 
 let size = DEFAULT_BOARD_SIZE;
 createBoard(size+2);
@@ -29,4 +30,11 @@ function createBoard(size) {
             row.appendChild(cell);
         }
     }
+}
+
+function createCell() {
+    const newCell = document.createElement('div');
+    newCell.classList.add('cell');
+
+    return newCell;
 }
