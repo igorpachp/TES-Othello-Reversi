@@ -6,6 +6,23 @@ const cells = [];
 const playableCells = range(11, 89).filter(i => 1 <= i % 10 && i % 10 <= 8);
 let size = DEFAULT_BOARD_SIZE;
 
+// jogadores
+const BLACK = 'black';
+const WHITE = 'white';
+let playerHuman = BLACK;
+let playerAI = WHITE;
+
+// constantes auxiliares de direção
+const UP = -10;
+const DOWN = 10;
+const LEFT = -1;
+const RIGHT = 1;
+const UP_RIGHT = -9;
+const DOWN_RIGHT = 11;
+const DOWN_LEFT = 9;
+const UP_LEFT = -11;
+const DIRECTIONS = [UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT];
+
 // botões
 const btnstart = document.getElementById('btnstart');
 const btnrules = document.getElementById('btnrules');
@@ -55,7 +72,6 @@ function createBoard(size) {
     let i = 0;
 
     for (let row of rows) {
-
         for (let j = 0; j < size; j++) {
             let cell = createCell(i + j);
 
@@ -82,10 +98,10 @@ function setStartingPosition() {
         }
     });
 
-    insertPiece(44, 'white');
-    insertPiece(55, 'white');
-    insertPiece(54, 'black');
-    insertPiece(45, 'black');
+    insertPiece(44, WHITE);
+    insertPiece(55, WHITE);
+    insertPiece(54, BLACK);
+    insertPiece(45, BLACK);
 }
 
 // função auxiliar com a função de criar células
@@ -94,6 +110,11 @@ function createCell(id) {
 
     newCell.classList.add('cell');
     newCell.id = `${id}`;
+    newCell.onclick = () => {
+        if (isValidCell(id) && isLegalMove(id, playerHuman)) {
+            insertPiece(id, playerHuman);
+        }
+    };
 
     return newCell;
 }
@@ -132,4 +153,46 @@ function insertPiece(id, color) {
 // do painel de regras
 function displayRules(displayRules) {
     rules.style.display = displayRules ? 'block' : 'none';
+}
+
+// função para verifical se uma célula é jogável
+function isValidCell(move) {
+    return playableCells.includes(move);
+}
+
+// função para verificar se um movimento
+// é válido para determinado jogador
+function isLegalMove(move, player) {
+    function formsBracket(direction) {
+        return findBracket(move, player, direction);
+    }
+
+    return !cells[move].firstChild && DIRECTIONS.map(formsBracket).some((cell) => cell != null);
+}
+
+// função para percorrer as células 
+// em uma direção até encontrar uma 
+// peça da cor do jogador, ou até
+// chegar a uma borda
+function findBracket(cell, player, direction) {
+    let bracket = cell + direction;
+    const opp = opponent(player);
+
+    if (cellHoldsPieceOfColor(bracket, player)) return null;
+    while (cellHoldsPieceOfColor(bracket, opp)) bracket += direction;
+
+    return cells[bracket].firstChild ? bracket : null;
+}
+
+// função para verificar se uma celula contém
+// uma peça de determinada cor
+function cellHoldsPieceOfColor(id, color) {
+    if (!cells[id].firstChild) return false;
+    return cells[id].firstChild.classList.contains(color);
+}
+
+// função para determinar o oponente
+// de um jogador
+function opponent(player) {
+    return player == WHITE ? BLACK : WHITE;
 }
