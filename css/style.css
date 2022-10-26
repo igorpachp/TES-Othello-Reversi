@@ -95,3 +95,45 @@
 .white {
     background-color: white;
 }
+
+#rules {
+    display: none;
+    margin: 32px auto 64px;
+    padding: 8px 0 8px 8px;
+    border: solid #ff4444 8px;
+    font-size: 20px;
+    background-color: antiquewhite;
+    font-family: monospace;
+}
+
+h2 {
+    text-align: center;
+    font-size: 32px;
+    font-family: monospace;
+    text-transform: uppercase;
+    margin: 8px auto 32px;
+    padding: 4px;
+    border-bottom: solid 2px #444444;
+    width: fit-content;
+}
+
+#closerules {
+    cursor: pointer;
+    background-color: black;
+    float: right;
+    border-radius: 50%;
+    margin: 16px;
+    width: 32px;
+    height: 32px;
+    color: white;
+    font-weight: bold;
+}
+
+#closerules:hover {
+    background-color: gray;
+    border: #444444 solid;
+}
+
+li {
+    margin: 16px 64px;
+}

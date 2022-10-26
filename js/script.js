@@ -1,9 +1,12 @@
 DEFAULT_BOARD_SIZE = 8;
 
+// const board = document.getElementById('board');
 const main = document.getElementById('main');
 const cells = [];
 var board;
 let size = DEFAULT_BOARD_SIZE;
+// createBoard(size + 2);
+// setStartingPosition();
 
 // botões
 const btnstart = document.getElementById('btnstart');
@@ -105,4 +108,8 @@ function insertPiece(r, c, color) {
     const piece = createPiece(color);
 
     cell.appendChild(piece);
+}
+
+function displayRules(displayRules) {
+    rules.style.display = displayRules ? 'block' : 'none';
 }
