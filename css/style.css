@@ -1,9 +1,59 @@
+.container {
+    width: 512px;
+    margin: auto;
+    display: flow-root;
+}
+
+.display {
+    background-color: white;
+    margin: 32px auto;
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 32px;
+    border: 8px solid black;
+    text-transform: uppercase;
+}
+
+.buttons {
+    margin: 16px auto;
+    box-sizing: border-box;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.btn {
+    cursor: pointer;
+    background-color: #ff4444;
+    border: none;
+    padding: 16px 32px;
+    text-align: center;
+    color: antiquewhite;
+    text-transform: uppercase;
+    font-size: large;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.btn:hover {
+    background-color: red;
+}
+
+#btnrestart {
+    display: none;
+}
+
+#main {
+    display: none;
+}
+
 #board {
     height: 512px;
     width: 512px;
     padding: 2px;
     box-sizing: border-box;
-    background-color: antiquewhite;
+    background-color: #ff4444;
     display: flex;
     flex-direction: column;
     gap: 2px 0;
@@ -22,7 +72,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f0feff;
+    background-color: antiquewhite;
 }
 
 .hidden {
@@ -32,7 +82,7 @@
 
 .piece {
     box-sizing: border-box;
-    border: 2px solid #88888888;
+    border: 2px solid #777777;
     border-radius: 50%;
     height: 85%;
     width: 85%;

@@ -1,11 +1,29 @@
 DEFAULT_BOARD_SIZE = 8;
 
-const board = document.getElementById('board');
+const main = document.getElementById('main');
 const cells = [];
-
+var board;
 let size = DEFAULT_BOARD_SIZE;
-createBoard(size + 2);
-setStartingPosition();
+
+// botões
+const btnstart = document.getElementById('btnstart');
+const btnrules = document.getElementById('btnrules');
+const btnrestart = document.getElementById('btnrestart');
+const closerules = document.getElementById('closerules');
+
+// atribuindo eventos aos botões
+btnstart.addEventListener("click", () => {
+    if (main.firstChild == null) {
+        board = createBoard(size + 2);
+        main.appendChild(board);
+        setStartingPosition();
+        main.style.display = 'block';
+        btnrestart.style.display = 'block';
+        btnstart.style.display = 'none';
+    }
+});
+btnrules.addEventListener("click", () => {displayRules(true);});
+closerules.addEventListener("click", () => {displayRules(false);});
 
 // função para criar o tabuleiro de jogo
 // o tabuleiro é basicamente uma grade NxN
@@ -14,6 +32,9 @@ setStartingPosition();
 // criadas apenas para utilizar referência direta.
 // O mesmo pode ser dito para a primeira e última coluna.
 function createBoard(size) {
+    const board = document.createElement('div');
+    board.id = 'board';
+
     for (let i = 0; i < size; i++) {
         let row;
 
@@ -39,6 +60,8 @@ function createBoard(size) {
             row.appendChild(cell);
         }
     }
+
+    return board;
 }
 
 // função para estabelecer estado inicial do jogo
