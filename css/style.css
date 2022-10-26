@@ -75,7 +75,7 @@
     background-color: antiquewhite;
 }
 
-.hidden {
+.blocked {
     flex-grow: 0.5;
     background: none;
 }

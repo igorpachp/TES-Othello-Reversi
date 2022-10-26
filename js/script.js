@@ -1,12 +1,10 @@
-DEFAULT_BOARD_SIZE = 8;
+const DEFAULT_BOARD_SIZE = 8;
 
-// const board = document.getElementById('board');
 const main = document.getElementById('main');
+let board = null;
 const cells = [];
-var board;
+const playableCells = range(11, 89).filter(i => 1 <= i % 10 && i % 10 <= 8);
 let size = DEFAULT_BOARD_SIZE;
-// createBoard(size + 2);
-// setStartingPosition();
 
 // botões
 const btnstart = document.getElementById('btnstart');
@@ -16,14 +14,17 @@ const closerules = document.getElementById('closerules');
 
 // atribuindo eventos aos botões
 btnstart.addEventListener("click", () => {
-    if (main.firstChild == null) {
+    if (!board) {
         board = createBoard(size + 2);
         main.appendChild(board);
-        setStartingPosition();
-        main.style.display = 'block';
-        btnrestart.style.display = 'block';
-        btnstart.style.display = 'none';
     }
+    setStartingPosition();
+    main.style.display = 'block';
+    btnrestart.style.display = 'block';
+    btnstart.style.display = 'none';
+});
+btnrestart.addEventListener("click", () => {
+    setStartingPosition();
 });
 btnrules.addEventListener("click", () => {displayRules(true);});
 closerules.addEventListener("click", () => {displayRules(false);});
@@ -43,52 +44,68 @@ function createBoard(size) {
 
         row = document.createElement('div');
         row.classList.add('row');
-        // ocultando linhas inúteis
+        // bloqueando linhas inúteis
         if (i == 0 || i == size - 1) {
-            row.classList.add('hidden');
+            row.classList.add('blocked');
         }
         board.appendChild(row);
     }
     
     const rows = board.getElementsByClassName('row');
-    for (let row of rows) {
-        for (let j = 0; j < size; j++) {
-            let cell = createCell();
+    let i = 0;
 
-            // ocultando células inúteis
+    for (let row of rows) {
+
+        for (let j = 0; j < size; j++) {
+            let cell = createCell(i + j);
+
+            // bloqueando células inúteis
             if (j == 0 || j == size - 1 || row == board.firstChild || row == board.lastChild) {
-                cell.classList.add('hidden');
+                cell.classList.add('blocked');
             }
             cells.push(cell);
             row.appendChild(cell);
         }
+        i += 10;
     }
-
+    
     return board;
 }
 
 // função para estabelecer estado inicial do jogo
 function setStartingPosition() {
-    start = size / 2;
+    playableCells.forEach((id) =>{
+        let cell = cells[id];
 
-    insertPiece(start, start, 'white');
-    insertPiece(start + 1, start + 1, 'white');
-    insertPiece(start + 1, start, 'black');
-    insertPiece(start, start + 1, 'black');
+        if (cell.firstChild) {
+            cell.firstChild.remove();
+        }
+    });
+
+    insertPiece(44, 'white');
+    insertPiece(55, 'white');
+    insertPiece(54, 'black');
+    insertPiece(45, 'black');
 }
 
 // função auxiliar com a função de criar células
-function createCell() {
+function createCell(id) {
     const newCell = document.createElement('div');
+
     newCell.classList.add('cell');
+    newCell.id = `${id}`;
 
     return newCell;
 }
 
+function range(first, last) {
+    return [...Array(last - first + 1).keys()].map(i => i + first);
+}
+
 // função para encontrar uma célula 
 // através de referência direta
-function getCell(r, c) {
-    return cells[r * (size + 2) + c];
+function getCell(id) {
+    return cells[id];
 }
 
 // função para criar uma peça baseado
@@ -103,13 +120,16 @@ function createPiece(color) {
 
 // função para inserir uma peça de
 // determinada cor em uma célula específica
-function insertPiece(r, c, color) {
-    const cell = getCell(r, c);
+function insertPiece(id, color) {
+    // const cell = getCell(r, c);
+    const cell = cells[id];
     const piece = createPiece(color);
 
     cell.appendChild(piece);
 }
 
+// função para controlar a exibição 
+// do painel de regras
 function displayRules(displayRules) {
     rules.style.display = displayRules ? 'block' : 'none';
 }
