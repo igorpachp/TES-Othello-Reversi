@@ -5,12 +5,18 @@ let board = null;
 const cells = [];
 const playableCells = range(11, 89).filter(i => 1 <= i % 10 && i % 10 <= 8);
 let size = DEFAULT_BOARD_SIZE;
+const blackScore = document.getElementById('black');
+const whiteScore = document.getElementById('white');
+const turnStr = document.getElementById('turn');
 
 // jogadores
 const BLACK = 'black';
 const WHITE = 'white';
 let playerHuman = BLACK;
 let playerAI = WHITE;
+let turn = playerHuman;
+let blackCount = 0;
+let whiteCount = 0;
 
 // constantes auxiliares de direção
 const UP = -10;
@@ -30,21 +36,27 @@ const btnrestart = document.getElementById('btnrestart');
 const closerules = document.getElementById('closerules');
 
 // atribuindo eventos aos botões
-btnstart.addEventListener("click", () => {
+btnstart.addEventListener("click", startGame);
+btnrestart.addEventListener("click", resetGame);
+btnrules.addEventListener("click", () => {displayRules(true);});
+closerules.addEventListener("click", () => {displayRules(false);});
+
+function startGame() {
     if (!board) {
         board = createBoard(size + 2);
         main.appendChild(board);
     }
     setStartingPosition();
+    setScoreText();
     main.style.display = 'block';
     btnrestart.style.display = 'block';
     btnstart.style.display = 'none';
-});
-btnrestart.addEventListener("click", () => {
+}
+
+function resetGame() {
     setStartingPosition();
-});
-btnrules.addEventListener("click", () => {displayRules(true);});
-closerules.addEventListener("click", () => {displayRules(false);});
+    setScoreText();
+}
 
 // função para criar o tabuleiro de jogo
 // o tabuleiro é basicamente uma grade NxN
@@ -88,8 +100,15 @@ function createBoard(size) {
     return board;
 }
 
+function setScoreText() {
+    whiteScore.innerHTML = `Brancas: ${whiteCount}`;
+    blackScore.innerHTML = `Pretas: ${blackCount}`;
+    turnStr.innerHTML = turn ? `Jogam as ${turn == BLACK ? 'Pretas' : 'Brancas'}` : 'Fim de Jogo';
+}
+
 // função para estabelecer estado inicial do jogo
 function setStartingPosition() {
+    turn = playerHuman;
     playableCells.forEach((id) =>{
         let cell = cells[id];
 
@@ -111,22 +130,37 @@ function createCell(id) {
     newCell.classList.add('cell');
     newCell.id = `${id}`;
     newCell.onclick = () => {
-        if (isValidCell(id) && isLegalMove(id, playerHuman)) {
-            insertPiece(id, playerHuman);
-        }
+        play(turn, id);
     };
 
     return newCell;
 }
 
-function range(first, last) {
-    return [...Array(last - first + 1).keys()].map(i => i + first);
+function play(player, id) {
+    if (isValidCell(id) && isLegalMove(id, player)) {
+        insertPiece(id, player);
+        DIRECTIONS.forEach(direction =>{
+            swapPieces(id, player, direction);
+        });
+
+        turn = nextPlayer(player);
+    }
+    setScoreText();
+
+    return score(playerHuman);
 }
 
-// função para encontrar uma célula 
-// através de referência direta
-function getCell(id) {
-    return cells[id];
+function nextPlayer(previous) {
+    const opp = opponent(previous);
+
+    if(hasAvailableMoves(opp)) return opp;
+    if(hasAvailableMoves(previous)) return previous;
+    
+    return null;
+}
+
+function range(first, last) {
+    return [...Array(last - first + 1).keys()].map(i => i + first);
 }
 
 // função para criar uma peça baseado
@@ -145,6 +179,9 @@ function insertPiece(id, color) {
     // const cell = getCell(r, c);
     const cell = cells[id];
     const piece = createPiece(color);
+
+    if (color == BLACK) blackCount++;
+    else whiteCount++;
 
     cell.appendChild(piece);
 }
@@ -195,4 +232,46 @@ function cellHoldsPieceOfColor(id, color) {
 // de um jogador
 function opponent(player) {
     return player == WHITE ? BLACK : WHITE;
+}
+
+function swapPieces(move, player, direction) {
+    const bracket = findBracket(move, player, direction);
+    let cell = move + direction;
+    
+    if(!bracket) return;
+    while (cell != bracket) {
+        cells[cell].firstChild.classList.remove(opponent(player));
+        cells[cell].firstChild.classList.add(player);
+        if (player == BLACK) {
+            blackCount++;
+            whiteCount--;
+        }
+        else {
+            blackCount--;
+            whiteCount++;
+        }
+        cell += direction;
+    }
+}
+
+function legalMoves(player) {
+    return playableCells.filter(move => isLegalMove(move, player));
+}
+
+function hasAvailableMoves(player) {
+    return legalMoves(player).length > 0;
+}
+
+function score(player) {
+    let playerScore = 0;
+    let oppScore = 0;
+
+    playableCells.forEach ((cell) => {
+        let piece = cells[cell].firstChild;
+
+        if(piece && piece.classList.contains(player)) playerScore++;
+        else if(piece) oppScore++;
+    });
+
+    return playerScore - oppScore;
 }
