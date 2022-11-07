@@ -3,8 +3,23 @@ const main = document.getElementById('main');
 let board = null;
 // array para faciliar o acesso às células
 const cells = [];
+const pseudoBoard = [];
 // array para estipular quais células são jogaveis, ou seja, podem armazenar uma peça
 const playableCells = range(11, 89).filter(i => 1 <= i % 10 && i % 10 <= 8);
+const CELLS_VALUES = [
+    0,  0   ,  0    ,  0    ,  0    ,  0    ,  0    ,  0    ,  0    , 0,
+    0,  120	, -20	,  20	,  5	,  5	,  20  	, -20  	,  120  , 0,
+    0, -20	, -40	, -5  	, -5  	, -5  	, -5  	, -40	, -20   , 0,
+    0,  20	, -5  	,  15  	,  3  	,  3  	,  15  	, -5  	,  20   , 0,
+    0,  5	, -5  	,  3  	,  3  	,  3  	,  3  	, -5  	,  5	, 0,
+    0,  5	, -5  	,  3  	,  3  	,  3  	,  3  	, -5  	,  5	, 0,
+    0,  20	, -5  	,  15  	,  3  	,  3  	,  15  	, -5  	,  20   , 0,
+    0, -20	, -40	, -5  	, -5  	, -5  	, -5  	, -40	, -20   , 0,
+    0,  120	, -20  	,  20  	,  5  	,  5  	,  20  	, -20  	,  120  , 0,
+    0,  0   ,  0    ,  0    ,  0    ,  0    ,  0    ,  0    ,  0    , 0
+];
+const MAX_BOARD_VALUE = CELLS_VALUES.map((weight) => weight >= 0 ? weight : -weight).reduce((sum, weight) => sum + weight, 0);
+const MIN_BOARD_VALUE = -MAX_BOARD_VALUE;
 
 // placar
 const blackScore = document.getElementById('black');
@@ -54,7 +69,7 @@ function startGame() {
         main.appendChild(board);
     }
 
-    setStartingPosition(cells, false); // construindo estado inicial do jogo
+    setStartingPosition(false); // construindo estado inicial do jogo
     setScoreText(); // mostrando placar inicial
 
     // redefinindo objetos visiveis e invisíveis na página
@@ -67,7 +82,7 @@ function startGame() {
 function resetGame() {
     blackCount = 0;
     whiteCount = 0;
-    setStartingPosition(cells, true);
+    setStartingPosition(true);
     setScoreText();
 }
 
@@ -107,6 +122,7 @@ function createBoard(size) {
                 cell.classList.add('blocked');
             }
             cells.push(cell);
+            pseudoBoard.push(null);
             row.appendChild(cell);
         }
         i += 10;
@@ -123,25 +139,26 @@ function setScoreText() {
 }
 
 // função para estabelecer estado inicial do jogo
-function setStartingPosition(brd, isReset) {
+function setStartingPosition(isReset) {
     turn = playerHuman; // o jogador sempre terá o primeiro movimento
 
     // se a função é chamada com o intuito de redefinir o tabuleiro
     // precisamos remover todas as peças antes de prosseguir
     if (isReset) {
         playableCells.forEach((id) => {
-            let cell = brd[id];
+            let cell = cells[id];
 
             if (cell.firstChild) {
                 cell.firstChild.remove();
             }
+            pseudoBoard[id] = null;
         })
     };
 
-    insertPiece(44, WHITE, brd);
-    insertPiece(55, WHITE, brd);
-    insertPiece(54, BLACK, brd);
-    insertPiece(45, BLACK, brd);
+    insertPiece(44, WHITE, pseudoBoard);
+    insertPiece(55, WHITE, pseudoBoard);
+    insertPiece(54, BLACK, pseudoBoard);
+    insertPiece(45, BLACK, pseudoBoard);
 }
 
 // função para criar células
@@ -152,8 +169,7 @@ function createCell(id) {
     newCell.id = `${id}`;
     newCell.onclick = () => {
         // tenta fazer uma jogada para o jogador
-        play(playerHuman, id, cells);
-
+        play(playerHuman, id, pseudoBoard);
         // pede que o computador realize sua(s) jogada(s)
         // precisamos verificar múltiplas vezes se ainda é turno
         // do computador pois pode acontecer de não haver movimentos 
@@ -161,7 +177,7 @@ function createCell(id) {
         // realiza movimentos até que o jogador tenha jogadas,
         //  ou até que o jogo acabe quando as jogadas legais
         // do computador também se esgotarem
-        while (turn == playerAI) aiPlay(newbieStrategy);
+        while (turn == playerAI) aiPlay(minimaxSearcher(3, weightedScore));
     };
 
     return newCell;
@@ -179,7 +195,7 @@ function play(player, id, brd) {
     }
     setScoreText(); // atualiza placar
 
-    return [brd, score(playerHuman, brd)];
+    return [brd, weightedScore(playerHuman, brd)];
 }
 
 // função para determinar qual jogador deve executar a próxima jogada
@@ -214,14 +230,14 @@ function createPiece(color) {
 // função para inserir uma peça de
 // determinada cor em uma célula específica
 function insertPiece(id, color, brd) {
-    const cell = brd[id];
-    const piece = createPiece(color);
+    brd[id] = color;
 
     // atualizando contagem de peças
-    if (color == BLACK) blackCount++;
-    else whiteCount++;
-
-    cell.appendChild(piece);
+    if (brd == pseudoBoard) {
+        cells[id].appendChild(createPiece(color));
+        if (color == BLACK) blackCount++;
+        else whiteCount++;
+    }
 }
 
 // função para controlar a exibição 
@@ -251,7 +267,7 @@ function isLegalMove(move, player, brd) {
     // retorna:
     // true (celula escolhida esta vazia e movimento captura pelo menos 1 peça em pelo menos 1 direção)
     // false (celula escolhida não esta vazia ou movimento não captura nenhuma peça em nenhuma direção)
-    return !cells[move].firstChild && DIRECTIONS.map(formsBracket).some((cell) => cell != null);
+    return !brd[move] && DIRECTIONS.map(formsBracket).some((cell) => cell != null);
 }
 
 // função para percorrer as células 
@@ -270,14 +286,14 @@ function findBracket(cell, player, brd, direction) {
     // retorne:
     // id da celula, caso contenha uma peça (obrigatoriamente do jogador)
     // nulo, caso a celula não contenha peça
-    return brd[bracket].firstChild ? bracket : null;
+    return brd[bracket] ? bracket : null;
 }
 
 // função para verificar se uma celula contém
 // uma peça de determinada cor
 function cellHoldsPieceOfColor(id, color, brd) {
-    if (!brd[id].firstChild) return false;
-    return brd[id].firstChild.classList.contains(color);
+    if (!brd[id]) return false;
+    return brd[id] == color;
 }
 
 // função para determinar o oponente
@@ -303,17 +319,22 @@ function swapPieces(move, player, brd, direction) {
     // ande na direção até chegar a célula de captura
     while (cell != bracket) {
         // troca de cor
-        brd[cell].firstChild.classList.remove(opponent(player));
-        brd[cell].firstChild.classList.add(player);
+        brd[cell] = player;
         // muda placar
-        if (player == BLACK) {
-            blackCount++;
-            whiteCount--;
+        if (brd == pseudoBoard) {
+            cells[cell].firstChild.classList.remove(opponent(player));
+            cells[cell].firstChild.classList.add(player);
+
+            if (player == BLACK) {
+                blackCount++;
+                whiteCount--;
+            }
+            else {
+                blackCount--;
+                whiteCount++;
+            }
         }
-        else {
-            blackCount--;
-            whiteCount++;
-        }
+
         cell += direction;
     }
 }
@@ -329,17 +350,25 @@ function hasAvailableMoves(player, brd) {
     return legalMoves(player, brd).length > 0;
 }
 
+// função para contar as peças de cada jogador em um tabuleiro
+function countPieces(player, brd, pScore, oScore, weighted) {
+    playableCells.forEach((cell) => {
+        let piece = brd[cell];
+
+        if (piece && piece == player) pScore += weighted ? CELLS_VALUES[cell] : 1;
+        else if(piece) oScore += weighted ? CELLS_VALUES[cell] : 1;
+    });
+
+    return [pScore, oScore];
+}
+
 // função para avaliar vantagem de um jogador sobre outro
-function score(player, brd) {
+function weightedScore(player, brd) {
     let playerScore = 0;
     let oppScore = 0;
 
-    playableCells.forEach ((cell) => {
-        let piece = brd[cell].firstChild;
-
-        if(piece && piece.classList.contains(player)) playerScore++;
-        else if(piece) oppScore++;
-    });
+    let scr = countPieces(player, brd, playerScore, oppScore, true);
+    [playerScore, oppScore] = scr;
 
     return playerScore - oppScore;
 }
@@ -356,7 +385,7 @@ function makeMove(move, player, brd) {
 
 // função responsável pelas decisões e movimentos do computador
 function aiPlay(strategy) {
-    const brd = cells;
+    const brd = pseudoBoard;
     let ai = playerAI;
 
     // só executa movimentos em seus turnos
@@ -372,7 +401,7 @@ function aiPlay(strategy) {
         setScoreText();
     }
 
-    return [brd, score(playerHuman, brd)];
+    return [brd, weightedScore(playerHuman, brd)];
 }
 
 // função para escolher movimento do computador de acordo com a estrategia
@@ -390,21 +419,49 @@ function getMove(strategy, player, brd) {
 
 // função para fazer uma cópia profunda do tabuleiro
 function cloneBoard(brd) {
-    const clone = [];
-
-    brd.forEach((cell)=>{
-        clone.push(cell.cloneNode(true));
-    });
-
-    return clone;
+    return [...brd];
 }
 
-function random(floor, ceiling) {
-    return Math.floor(Math.random() * (ceiling - floor)) + floor;
-}
-
-function newbieStrategy(player, brd) {
+function minimax(player, brd, depth, evaluate) {
     const moves = legalMoves(player, brd);
+    const opp = opponent(player);
+    
+    function value(brd) {
+        return -minimax(opp, brd, depth - 1, evaluate)[0];
+    }
+    
+    if (!depth) return [evaluate(player, brd), null];
+    if (!moves) {
+        if (!hasAvailableMoves(opp, brd)) return [finalValue(player, brd), null];
+        return [value(brd), null];
+    }
 
-    return moves[random(0, moves.length)];
+    let greaterMove = moves[0];
+    let greaterValue = value(makeMove(greaterMove, player, cloneBoard(brd)));
+    
+    for (let i = 1; i < moves.length; i++) {
+        let newValue = value(makeMove(moves[i], player, cloneBoard(brd)));
+
+        if (newValue > greaterValue) {
+            greaterMove = moves[i];
+            greaterValue = newValue;
+        }
+    }
+    
+    return [greaterValue, greaterMove];
+}
+
+function finalValue(player, brd) {
+    const diff = score(player, brd);
+
+    return diff < 0 ? MIN_BOARD_VALUE: diff > 0 ? MAX_BOARD_VALUE : diff;
+}
+
+function minimaxSearcher(depth, evaluate) {
+
+    function strategy(player, brd) {
+        return minimax(player, brd, depth, evaluate)[1];
+    }
+
+    return strategy;
 }
